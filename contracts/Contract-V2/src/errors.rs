@@ -18,4 +18,5 @@ pub enum ContractError {
     InvalidTimeRange = 14,
     AlreadyCancelled = 15,
     Overflow = 16,
+    BatchTooLarge = 16,
 }
