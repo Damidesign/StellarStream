@@ -240,3 +240,40 @@ enum NotificationPlatform {
   discord
   telegram
 }
+
+// Global protocol statistics for landing page
+model GlobalStats {
+  id              String   @id @default("global")
+  tvlUsd          String   @default("0") // Total Value Locked in USD
+  volume24hUsd    String   @default("0") // 24h volume in USD
+  activeStreams   Int      @default(0)
+  totalStreams    Int      @default(0)
+  updatedAt       DateTime @updatedAt
+}
+
+// Daily TVL snapshots for growth charts
+model TvlSnapshot {
+  id        String   @id @default(cuid())
+  tvlUsd    String   // Total Value Locked in USD on this day
+  date      DateTime @unique // Midnight UTC
+  createdAt DateTime @default(now())
+
+  @@index([date])
+}
+
+// Asset metadata from stellar.toml
+model Asset {
+  id              String   @id @default(cuid())
+  tokenAddress    String   @unique
+  homeDomain      String?
+  name            String?
+  symbol          String?
+  imageUrl        String?
+  decimals        Int      @default(7)
+  isVerified      Boolean  @default(false)
+  lastFetchedAt   DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([tokenAddress])
+}
