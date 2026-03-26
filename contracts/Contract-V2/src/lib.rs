@@ -1,7 +1,7 @@
 #![no_std]
 #![allow(clippy::too_many_arguments)]
 use soroban_sdk::xdr::ToXdr;
-use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, IntoVal, Symbol, Vec};
+use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, IntoVal, String, Symbol, Vec};
 
 mod contracterror;
 mod storage;
@@ -21,6 +21,10 @@ use v1_interface::Client as V1Client;
 
 #[contract]
 pub struct Contract;
+
+const CONTRACT_VERSION: u32 = 2;
+const CONTRACT_METADATA_URI: &str =
+    "https://raw.githubusercontent.com/Emmyt24/StellarStream/main/contracts/Contract-V2/contract-metadata.json";
 
 #[soroban_sdk::contractclient(name = "VaultClient")]
 pub trait VaultTrait {
@@ -44,6 +48,14 @@ impl Contract {
 
     pub fn admin(env: Env) -> Address {
         storage::get_admin(&env)
+    }
+
+    pub fn version(_env: Env) -> u32 {
+        CONTRACT_VERSION
+    }
+
+    pub fn metadata(env: Env) -> String {
+        String::from_str(&env, CONTRACT_METADATA_URI)
     }
 
     // ----------------------------------------------------------------
@@ -753,9 +765,30 @@ impl Contract {
         Ok(())
     }
 
+    fn require_asset_whitelisted(env: &Env, asset: &Address) -> Result<(), Error> {
+        if !storage::is_asset_whitelisted(env, asset) {
+            return Err(Error::AssetNotWhitelisted);
+        }
+        Ok(())
+    fn apply_protocol_fee(env: &Env, token: &Address, total_amount: i128) -> Result<i128, Error> {
+        let fee_bps = storage::get_fee_bps(env);
+        if fee_bps == 0 {
+            return Ok(total_amount);
+        }
+
+        let treasury = storage::get_treasury(env).ok_or(Error::NoTreasury)?;
+        let fee = (total_amount * fee_bps as i128) / 10_000;
+        if fee > 0 {
+            storage::add_pending_fees(env, &treasury, token, fee);
+        }
+
+        Ok(total_amount - fee)
+    }
+
     pub fn create_stream(env: Env, args: StreamArgs) -> Result<u64, Error> {
         Self::require_not_paused(&env)?;
         args.sender.require_auth();
+        Self::require_asset_whitelisted(&env, &args.token)?;
 
         if args.start_time >= args.end_time
             || args.cliff_time < args.start_time
@@ -775,37 +808,7 @@ impl Contract {
             &args.total_amount,
         );
 
-        // ---- Affiliate Fee Split (Issue: Tokenomics) ----
-        // If a protocol fee is configured AND a treasury is set, deduct the fee
-        // from total_amount: 70% goes to MainTreasury, 30% to AffiliateAddress.
-        // Fees are stored in PendingFees for batch withdrawal.
-        let fee_bps = storage::get_fee_bps(&env);
-        let stream_amount = if fee_bps > 0 {
-            if let Some(treasury) = storage::get_treasury(&env) {
-                let fee = (args.total_amount * fee_bps as i128) / 10_000;
-                if fee > 0 {
-                    let treasury_share = (fee * 70) / 100;
-                    let affiliate_share = fee - treasury_share;
-
-                    storage::add_pending_fees(&env, &treasury, &args.token, treasury_share);
-
-                    if let Some(ref affiliate) = args.affiliate {
-                        storage::add_pending_fees(&env, affiliate, &args.token, affiliate_share);
-                    } else {
-                        // No affiliate — remainder also goes to treasury
-                        storage::add_pending_fees(&env, &treasury, &args.token, affiliate_share);
-                    }
-
-                    args.total_amount - fee
-                } else {
-                    args.total_amount
-                }
-            } else {
-                args.total_amount
-            }
-        } else {
-            args.total_amount
-        };
+        let stream_amount = Self::apply_protocol_fee(&env, &args.token, args.total_amount)?;
 
         let stream_id = storage::next_stream_id(&env);
 
@@ -875,6 +878,7 @@ impl Contract {
         signature: soroban_sdk::BytesN<64>,
     ) -> Result<u64, Error> {
         Self::require_not_paused(&env)?;
+        Self::require_asset_whitelisted(&env, &args.token)?;
         let now = env.ledger().timestamp();
 
         if now > args.deadline {
@@ -929,6 +933,8 @@ impl Contract {
             &args.total_amount,
         );
 
+        let stream_amount = Self::apply_protocol_fee(&env, &args.token, args.total_amount)?;
+
         let stream_id = storage::next_stream_id(&env);
 
         let stream = StreamV2 {
@@ -936,7 +942,7 @@ impl Contract {
             receiver: args.receiver.clone(),
             beneficiary: args.receiver.clone(),
             token: args.token.clone(),
-            total_amount: args.total_amount,
+            total_amount: stream_amount,
             start_time: args.start_time,
             end_time: args.end_time,
             cliff_time: args.cliff_time,
@@ -955,13 +961,13 @@ impl Contract {
         };
 
         storage::set_stream(&env, stream_id, &stream);
-        storage::update_stats(&env, args.total_amount, &sender_addr, &args.receiver);
+        storage::update_stats(&env, stream_amount, &sender_addr, &args.receiver);
 
         let mut data = Vec::new(&env);
         data.push_back(stream_id.into_val(&env));
         data.push_back(args.receiver.clone().into_val(&env));
         data.push_back(args.token.clone().into_val(&env));
-        data.push_back(args.total_amount.into_val(&env));
+        data.push_back(stream_amount.into_val(&env));
         data.push_back(args.cliff_time.into_val(&env));
         data.push_back(args.nonce.into_val(&env));
         data.push_back(now.into_val(&env));
@@ -1004,6 +1010,7 @@ impl Contract {
             if args.sender != sender {
                 return Err(Error::UnauthorizedSender);
             }
+            Self::require_asset_whitelisted(&env, &args.token)?;
 
             // Validate time ranges
             if args.start_time >= args.end_time
@@ -1037,13 +1044,14 @@ impl Contract {
 
         for args in streams.iter() {
             let stream_id = storage::next_stream_id(&env);
+            let stream_amount = Self::apply_protocol_fee(&env, &args.token, args.total_amount)?;
 
             let stream = StreamV2 {
                 sender: args.sender.clone(),
                 receiver: args.receiver.clone(),
                 beneficiary: args.receiver.clone(),
                 token: args.token.clone(),
-                total_amount: args.total_amount,
+                total_amount: stream_amount,
                 start_time: args.start_time,
                 end_time: args.end_time,
                 cliff_time: args.cliff_time,
@@ -1062,7 +1070,7 @@ impl Contract {
             };
 
             storage::set_stream(&env, stream_id, &stream);
-            storage::update_stats(&env, args.total_amount, &args.sender, &args.receiver);
+            storage::update_stats(&env, stream_amount, &args.sender, &args.receiver);
 
             let now = env.ledger().timestamp();
             let mut data = Vec::new(&env);
@@ -1070,7 +1078,7 @@ impl Contract {
             data.push_back(args.sender.clone().into_val(&env));
             data.push_back(args.receiver.clone().into_val(&env));
             data.push_back(args.token.clone().into_val(&env));
-            data.push_back(args.total_amount.into_val(&env));
+            data.push_back(stream_amount.into_val(&env));
             data.push_back(args.start_time.into_val(&env));
             data.push_back(args.cliff_time.into_val(&env));
             data.push_back(args.end_time.into_val(&env));
@@ -1087,7 +1095,7 @@ impl Contract {
             );
 
             stream_ids.push_back(stream_id);
-            total_created_amount = total_created_amount.checked_add(args.total_amount).unwrap();
+            total_created_amount = total_created_amount.checked_add(stream_amount).unwrap();
         }
 
         // Emit batch creation summary event
@@ -1264,7 +1272,7 @@ impl Contract {
     }
 
     // ----------------------------------------------------------------
-    // Issue: Affiliate Fee Split — admin helpers + fee withdrawal
+    // Issue: Protocol Fees — admin helpers + treasury withdrawal
     // ----------------------------------------------------------------
 
     /// Set the protocol treasury address. Admin-only.
@@ -1286,35 +1294,51 @@ impl Contract {
         Ok(())
     }
 
+    pub fn add_to_whitelist(env: Env, asset: Address) -> Result<(), Error> {
+        storage::try_get_admin(&env)?.require_auth();
+        storage::add_to_whitelist(&env, &asset);
+        Ok(())
+    }
+
+    pub fn remove_from_whitelist(env: Env, asset: Address) -> Result<(), Error> {
+        storage::try_get_admin(&env)?.require_auth();
+        storage::remove_from_whitelist(&env, &asset);
+        Ok(())
+    }
+
+    pub fn is_asset_whitelisted(env: Env, asset: Address) -> bool {
+        storage::is_asset_whitelisted(&env, &asset)
+    }
+
     /// Get the current protocol fee in basis points.
     pub fn get_fee_bps(env: Env) -> u32 {
         storage::get_fee_bps(&env)
     }
 
-    /// Withdraw accumulated protocol fees for `(recipient, token)`.
-    /// The recipient must authorise this call.
-    pub fn withdraw_fees(env: Env, recipient: Address, token: Address) -> Result<i128, Error> {
-        recipient.require_auth();
+    /// Withdraw accumulated protocol fees to the configured treasury. Admin-only.
+    pub fn withdraw_treasury(env: Env, token: Address) -> Result<i128, Error> {
+        storage::try_get_admin(&env)?.require_auth();
 
-        let amount = storage::get_pending_fees(&env, &recipient, &token);
+        let treasury = storage::get_treasury(&env).ok_or(Error::NoTreasury)?;
+        let amount = storage::get_pending_fees(&env, &treasury, &token);
         if amount <= 0 {
             return Err(Error::NothingToWithdraw);
         }
 
-        storage::clear_pending_fees(&env, &recipient, &token);
+        storage::clear_pending_fees(&env, &treasury, &token);
 
         let token_client = soroban_sdk::token::TokenClient::new(&env, &token);
-        token_client.transfer(&env.current_contract_address(), &recipient, &amount);
+        token_client.transfer(&env.current_contract_address(), &treasury, &amount);
 
         let now = env.ledger().timestamp();
         let mut data = Vec::new(&env);
-        data.push_back(recipient.clone().into_val(&env));
+        data.push_back(treasury.clone().into_val(&env));
         data.push_back(token.clone().into_val(&env));
         data.push_back(amount.into_val(&env));
         data.push_back(now.into_val(&env));
 
         env.events().publish(
-            (symbol_short!("fee_out"), recipient.clone()),
+            (symbol_short!("fee_out"), treasury.clone()),
             NebulaEvent {
                 version: 2,
                 timestamp: now,

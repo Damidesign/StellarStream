@@ -67,13 +67,15 @@ pub enum DataKeyV2 {
     // -- Time-locked Admin Actions -------------------------------
     ScheduledOp(crate::types::Operation), // 7
 
-    // -- Affiliate Fee Split (Issue: Tokenomics) -----------------
+    // -- Protocol Fees -------------------------------------------
     /// Protocol treasury address for fee collection
     Treasury, // 8
     /// Accumulated pending fees per (recipient, token) pair
     PendingFees(Address, Address), // 9
     /// Protocol fee in basis points (e.g. 100 = 1%)
     FeeBps, // 10
+    /// Verified assets supported for V2 stream creation
+    WhitelistedAsset(Address), // 11
 }
 
 /// Global stream counter.
@@ -453,7 +455,7 @@ pub fn clear_op(env: &Env, op: &crate::types::Operation) {
 }
 
 // ----------------------------------------------------------------
-// Affiliate Fee Split helpers (Issue: Tokenomics)
+// Protocol fee helpers
 // ----------------------------------------------------------------
 
 /// Set the protocol treasury address. Admin-only enforcement is in lib.rs.
@@ -503,4 +505,25 @@ pub fn clear_pending_fees(env: &Env, recipient: &Address, token: &Address) {
         .instance()
         .remove(&DataKeyV2::PendingFees(recipient.clone(), token.clone()));
     bump_instance(env);
+}
+
+pub fn add_to_whitelist(env: &Env, asset: &Address) {
+    env.storage()
+        .instance()
+        .set(&DataKeyV2::WhitelistedAsset(asset.clone()), &true);
+    bump_instance(env);
+}
+
+pub fn remove_from_whitelist(env: &Env, asset: &Address) {
+    env.storage()
+        .instance()
+        .remove(&DataKeyV2::WhitelistedAsset(asset.clone()));
+    bump_instance(env);
+}
+
+pub fn is_asset_whitelisted(env: &Env, asset: &Address) -> bool {
+    env.storage()
+        .instance()
+        .get(&DataKeyV2::WhitelistedAsset(asset.clone()))
+        .unwrap_or(false)
 }

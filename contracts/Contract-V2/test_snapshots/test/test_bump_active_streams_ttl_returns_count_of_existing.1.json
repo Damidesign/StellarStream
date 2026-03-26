@@ -25,6 +25,25 @@
     ],
     [],
     [],
+    [
+      [
+        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+        {
+          "function": {
+            "contract_fn": {
+              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4",
+              "function_name": "add_to_whitelist",
+              "args": [
+                {
+                  "address": "CDLDVFKHEZ2RVB3NG4UQA4VPD3TSHV6XMHXMHP2BSGCJ2IIWVTOHGDSG"
+                }
+              ]
+            }
+          },
+          "sub_invocations": []
+        }
+      ]
+    ],
     [],
     [],
     [
@@ -154,6 +173,39 @@
       [
         {
           "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "ledger_key_nonce": {
+                "nonce": 5541220902715666415
+              }
+            },
+            "durability": "temporary"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "ledger_key_nonce": {
+                    "nonce": 5541220902715666415
+                  }
+                },
+                "durability": "temporary",
+                "val": "void"
+              }
+            },
+            "ext": "v0"
+          },
+          6311999
+        ]
+      ],
+      [
+        {
+          "contract_data": {
             "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
             "key": {
               "ledger_key_nonce": {
@@ -190,7 +242,7 @@
             "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
             "key": {
               "ledger_key_nonce": {
-                "nonce": 5541220902715666415
+                "nonce": 4837995959683129791
               }
             },
             "durability": "temporary"
@@ -205,7 +257,7 @@
                 "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
                 "key": {
                   "ledger_key_nonce": {
-                    "nonce": 5541220902715666415
+                    "nonce": 4837995959683129791
                   }
                 },
                 "durability": "temporary",
@@ -264,6 +316,22 @@
                     },
                     {
                       "key": {
+                        "symbol": "cancellation_type"
+                      },
+                      "val": {
+                        "u32": 0
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "cancelled"
+                      },
+                      "val": {
+                        "bool": false
+                      }
+                    },
+                    {
+                      "key": {
                         "symbol": "cliff_time"
                       },
                       "val": {
@@ -283,12 +351,29 @@
                         "symbol": "end_time"
                       },
                       "val": {
+                        "u64": 0
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "end_time"
+                      },
+                      "val": {
                         "u64": 200
                       }
                     },
                     {
                       "key": {
                         "symbol": "multiplier_bps"
+                        "symbol": "is_recurrent"
+                      },
+                      "val": {
+                        "bool": false
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "migrated_from_v1"
                       },
                       "val": {
                         "i128": {
@@ -443,6 +528,22 @@
                     },
                     {
                       "key": {
+                        "symbol": "cancellation_type"
+                      },
+                      "val": {
+                        "u32": 0
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "cancelled"
+                      },
+                      "val": {
+                        "bool": false
+                      }
+                    },
+                    {
+                      "key": {
                         "symbol": "cliff_time"
                       },
                       "val": {
@@ -462,12 +563,29 @@
                         "symbol": "end_time"
                       },
                       "val": {
+                        "u64": 0
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "end_time"
+                      },
+                      "val": {
                         "u64": 200
                       }
                     },
                     {
                       "key": {
                         "symbol": "multiplier_bps"
+                        "symbol": "is_recurrent"
+                      },
+                      "val": {
+                        "bool": false
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "migrated_from_v1"
                       },
                       "val": {
                         "i128": {
@@ -741,6 +859,21 @@
                         },
                         "val": {
                           "u32": 1
+                        }
+                      },
+                      {
+                        "key": {
+                          "vec": [
+                            {
+                              "symbol": "WhitelistedAsset"
+                            },
+                            {
+                              "address": "CDLDVFKHEZ2RVB3NG4UQA4VPD3TSHV6XMHXMHP2BSGCJ2IIWVTOHGDSG"
+                            }
+                          ]
+                        },
+                        "val": {
+                          "bool": true
                         }
                       }
                     ]

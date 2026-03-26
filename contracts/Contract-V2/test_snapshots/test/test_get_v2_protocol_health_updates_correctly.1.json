@@ -503,6 +503,22 @@
                     },
                     {
                       "key": {
+                        "symbol": "cancellation_type"
+                      },
+                      "val": {
+                        "u32": 0
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "cancelled"
+                      },
+                      "val": {
+                        "bool": false
+                      }
+                    },
+                    {
+                      "key": {
                         "symbol": "cliff_time"
                       },
                       "val": {
@@ -522,12 +538,29 @@
                         "symbol": "end_time"
                       },
                       "val": {
+                        "u64": 0
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "end_time"
+                      },
+                      "val": {
                         "u64": 200
                       }
                     },
                     {
                       "key": {
                         "symbol": "multiplier_bps"
+                        "symbol": "is_recurrent"
+                      },
+                      "val": {
+                        "bool": false
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "migrated_from_v1"
                       },
                       "val": {
                         "i128": {
