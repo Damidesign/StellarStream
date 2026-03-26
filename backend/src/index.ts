@@ -139,6 +139,12 @@ app.use("/api/v1", apiRouter);
 import apiV2Router from "./api/v2/index.js";
 app.use("/api/v2", apiV2Router);
 
+// ── V3 API router ─────────────────────────────────────────────────────────────
+import apiV3Router from "./api/v3/index.js";
+// Support raw text bodies for CSV uploads on v3 routes
+app.use("/api/v3", express.text({ type: ["text/csv", "text/plain"], limit: "10mb" }));
+app.use("/api/v3", apiV3Router);
+
 // ── Batch metadata + stream graph ─────────────────────────────────────────────
 app.use("/api/v1", batchRoutes);
 
