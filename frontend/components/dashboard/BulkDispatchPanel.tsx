@@ -2,9 +2,16 @@
 
 // components/dashboard/BulkDispatchPanel.tsx
 // Issue #695 — Bulk-Retry for Failed Batch Transactions
+// Issue #778 — Batch-Transfer Progress Overlay integration
 
+import { useEffect } from "react";
 import type { BatchState } from "@/lib/bulk-splitter/use-bulk-splitter";
 import type { Recipient } from "@/lib/bulk-splitter/types";
+import {
+  BatchProgressOverlay,
+  saveBatchProgress,
+  clearBatchProgress,
+} from "@/components/batch-progress-overlay";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const STATUS_META: Record<
@@ -116,9 +123,27 @@ export function BulkDispatchPanel({
   const allDone = total > 0 && batchStates.every((b) => b.status === "success" || b.status === "error");
   const isRunning = pending > 0;
 
+  // Issue #778 — persist batch progress to sessionStorage so overlay survives refresh
+  useEffect(() => {
+    if (total === 0) return;
+    const overlayStatus = allDone ? "done" : failed > 0 && !isRunning ? "error" : "running";
+    saveBatchProgress({
+      sessionId: "bulk-dispatch",
+      current: succeeded,
+      total,
+      status: overlayStatus,
+    });
+    if (overlayStatus === "done") clearBatchProgress();
+  }, [total, succeeded, failed, isRunning, allDone]);
+
   if (total === 0) return null;
 
+  const overlayProgress = isRunning || (failed > 0 && !allDone)
+    ? { sessionId: "bulk-dispatch", current: succeeded, total, status: isRunning ? "running" as const : "error" as const }
+    : null;
+
   return (
+    <>
     <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06]">
@@ -206,5 +231,9 @@ export function BulkDispatchPanel({
         </div>
       )}
     </div>
+
+    {/* Issue #778 — persistent progress overlay */}
+    <BatchProgressOverlay progress={overlayProgress} />
+    </>
   );
 }
