@@ -7,6 +7,8 @@ import disbursementFileRouter from "./disbursement-file.routes.js";
 import safeVaultRouter from "./safe-vault.routes.js";
 import historyRouter from "./history.routes.js";
 import invoiceReportRouter from "./invoice-report.routes.js";
+import verifyListRouter from "./verify-list.routes.js";
+import exportRouter from "./export.routes.js";
 
 const router = Router();
 
@@ -24,5 +26,7 @@ router.use(disbursementFileRouter);
 router.use(safeVaultRouter);
 router.use(historyRouter);
 router.use(invoiceReportRouter);
+router.use(verifyListRouter);
+router.use(exportRouter);
 
 export default router;

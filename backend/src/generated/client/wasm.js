@@ -401,6 +401,23 @@ exports.Prisma.AssetConfigScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.DisbursementScalarFieldEnum = {
+  id: 'id',
+  senderAddress: 'senderAddress',
+  totalAmount: 'totalAmount',
+  asset: 'asset',
+  txHash: 'txHash',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.SplitRecipientScalarFieldEnum = {
+  id: 'id',
+  disbursementId: 'disbursementId',
+  recipientAddress: 'recipientAddress',
+  amount: 'amount',
+  status: 'status'
+};
+
 exports.Prisma.AssetMappingScalarFieldEnum = {
   id: 'id',
   stellarAssetId: 'stellarAssetId',
@@ -413,29 +430,6 @@ exports.Prisma.AssetMappingScalarFieldEnum = {
   isNative: 'isNative',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
-};
-
-exports.Prisma.PriceHistoryScalarFieldEnum = {
-  id: 'id',
-  asset: 'asset',
-  symbol: 'symbol',
-  priceUsd: 'priceUsd',
-  source: 'source',
-  recordedAt: 'recordedAt'
-};
-
-exports.Prisma.SplitLogScalarFieldEnum = {
-  id: 'id',
-  streamId: 'streamId',
-  asset: 'asset',
-  amount: 'amount',
-  sender: 'sender',
-  receiver: 'receiver',
-  txHash: 'txHash',
-  priceUsd: 'priceUsd',
-  priceSource: 'priceSource',
-  priceRecordedAt: 'priceRecordedAt',
-  executedAt: 'executedAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -481,6 +475,12 @@ exports.NotificationPlatform = exports.$Enums.NotificationPlatform = {
   telegram: 'telegram'
 };
 
+exports.PayoutStatus = exports.$Enums.PayoutStatus = {
+  PENDING: 'PENDING',
+  SENT: 'SENT',
+  FAILED: 'FAILED'
+};
+
 exports.Prisma.ModelName = {
   Stream: 'Stream',
   ContractEvent: 'ContractEvent',
@@ -504,9 +504,9 @@ exports.Prisma.ModelName = {
   Asset: 'Asset',
   AutopilotSchedule: 'AutopilotSchedule',
   AssetConfig: 'AssetConfig',
-  AssetMapping: 'AssetMapping',
-  PriceHistory: 'PriceHistory',
-  SplitLog: 'SplitLog'
+  Disbursement: 'Disbursement',
+  SplitRecipient: 'SplitRecipient',
+  AssetMapping: 'AssetMapping'
 };
 
 /**

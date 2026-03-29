@@ -18,10 +18,13 @@ pub enum Error {
     NotSplitSender = 13,      // caller is not the original sender
     SplitAlreadyCancelled = 14, // split was already cancelled
     SplitAlreadyExecuted = 15,  // split was already executed
-    SplitNotYetDue = 16,      // release_time has not been reached
+    SplitNotYetDue = 16,      // release_time has not been reached (cancel guard)
+    NotYetReleased = 22,      // min_timestamp not yet reached (execute guard)
     NothingToClaim = 17,      // claimable balance is zero
     CouncilNotSet = 18,       // council keys not initialized
     InsufficientCouncilSignatures = 19, // fewer than 5 unique valid signatures
     DuplicateCouncilSigner = 20,        // same council key signed twice
     InvalidCouncilSigner = 21,          // signer not in the stored council list
+    EmptyRecipients = 22,               // recipients vector is empty
+    InvalidBpsSum = 24,                 // bps values do not sum to 10_000
 }
