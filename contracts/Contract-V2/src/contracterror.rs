@@ -28,6 +28,9 @@ pub enum Error {
     OpNotScheduled = 23,
     NotBeneficiary = 24,
     VaultPaused = 25,
+    ContractTerminated = 26,
+    ClaimWindowExpired = 27,
+    SanctionedAddress = 28,
     /// refill_stream called before the current cycle has ended
     StreamNotExpired = 26,
     /// refill_stream called on a non-recurrent stream

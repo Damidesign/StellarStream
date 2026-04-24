@@ -249,6 +249,23 @@ pub struct PermitStreamCreatedEvent {
 }
 
 // ----------------------------------------------------------------
+// Contract lifecycle state (#934)
+// ----------------------------------------------------------------
+
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub enum ContractState {
+    Active,
+    Terminated,
+}
+
+/// Emitted when decommission_contract() is called.
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct ContractTerminatedEvent {
+    pub admin: Address,
+    pub claim_deadline: u64,
+    pub timestamp: u64,
 // Issue #597 - Atomic Multi-Transfer Implementation
 // ----------------------------------------------------------------
 

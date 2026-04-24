@@ -70,6 +70,12 @@ pub enum DataKeyV2 {
     // -- Time-locked Admin Actions -------------------------------
     ScheduledOp(crate::types::Operation), // 7
 
+    // -- Contract lifecycle (#934) --------------------------------
+    ContractState, // 8
+    ClaimDeadline, // 9
+
+    // -- Sanctions oracle (#937) ----------------------------------
+    OracleAddress, // 10
     // -- Protocol Fees -------------------------------------------
     /// Protocol treasury address for fee collection
     Treasury, // 8
@@ -996,4 +1002,45 @@ pub fn add_recovery_approval(env: &Env, signer: &Address) {
     approvals.push_back(signer.clone());
     env.storage().instance().set(&DataKeyV2::RecoveryApprovals, &approvals);
     bump_instance(env);
+}
+
+// ----------------------------------------------------------------
+// Contract lifecycle helpers (#934)
+// ----------------------------------------------------------------
+
+/// 90 days in seconds.
+pub const CLAIM_WINDOW_SECS: u64 = 90 * 24 * 60 * 60;
+
+pub fn set_contract_state(env: &Env, state: &crate::types::ContractState) {
+    env.storage().instance().set(&DataKeyV2::ContractState, state);
+    bump_instance(env);
+}
+
+pub fn get_contract_state(env: &Env) -> crate::types::ContractState {
+    env.storage()
+        .instance()
+        .get(&DataKeyV2::ContractState)
+        .unwrap_or(crate::types::ContractState::Active)
+}
+
+pub fn set_claim_deadline(env: &Env, deadline: u64) {
+    env.storage().instance().set(&DataKeyV2::ClaimDeadline, &deadline);
+    bump_instance(env);
+}
+
+pub fn get_claim_deadline(env: &Env) -> Option<u64> {
+    env.storage().instance().get(&DataKeyV2::ClaimDeadline)
+}
+
+// ----------------------------------------------------------------
+// Sanctions oracle helpers (#937)
+// ----------------------------------------------------------------
+
+pub fn set_oracle_address(env: &Env, oracle: &Address) {
+    env.storage().instance().set(&DataKeyV2::OracleAddress, oracle);
+    bump_instance(env);
+}
+
+pub fn get_oracle_address(env: &Env) -> Option<Address> {
+    env.storage().instance().get(&DataKeyV2::OracleAddress)
 }
