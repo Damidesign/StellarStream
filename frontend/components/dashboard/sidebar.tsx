@@ -14,6 +14,8 @@ import {
   PanelLeftOpen,
   History as HistoryIcon,
   Shield,
+  TrendingDown,
+  LayoutTemplate,
   Menu,
   X,
 } from "lucide-react";
@@ -79,6 +81,8 @@ export function Sidebar({ onOpenAuditLog }: SidebarProps) {
       icon: CirclePlus,
     },
     { label: "Settings", href: "/dashboard/settings", icon: Settings },
+    { label: "Disbursements", href: "/dashboard/disbursements", icon: TrendingDown },
+    { label: "Templates", href: "/dashboard/templates", icon: LayoutTemplate },
   ];
 
   return (
